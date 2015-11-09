@@ -17,7 +17,13 @@
 [codeclimate-test-svg]: https://codeclimate.com/github/snowyu/object-type.js/badges/coverage.svg
 [codeclimate-test]: https://codeclimate.com/github/snowyu/object-type.js/coverage
 
-The object type info.
+The Object type can hold the attributes of the object.
+
+* Object Type Attributes:
+  * `attributes` *(object)*: this object's attribute list.
+  * `strict` *(boolean)*: whether treat this object as strict mode. defaults to false.
+    * the object can only have attributes in the attributes list if strict mode is enabled.
+
 
 ## Usage
 
