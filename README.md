@@ -44,7 +44,7 @@ var Obj = ObjectType({
 })
 //=<type "Object": "attributes":{"s":"String","n":{"required":true,"type":"Number"}},"strict":true>
 var value = Obj.create({s:'123', n:33})
-//=<type "Object": "strict":true,"type":"Number","required":true,"value":{"s":"12","n":12}>
+//=<type "Object": "attributes":{"s":"String","n":{"required":true,"type":"Number"}},"strict":true,"value":{"s":"123","n":33}>
 value = Obj.create({s:'123'})
 //=TypeError: "[object Object]" is an invalid Object
 console.log(Obj.errors)

@@ -194,6 +194,8 @@ describe 'ObjectType', ->
       n = object.wrapValue({a:24})
       n.should.have.property 'a', 24
       n.should.be.instanceOf ObjectValue
+      n = object.createValue({})
+      n.should.be.instanceOf ObjectValue
 
   describe '.validate()', ->
     t = object.cloneType attributes:

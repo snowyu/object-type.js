@@ -1,9 +1,11 @@
 createObject    = require 'inherits-ex/lib/createObject'
 inheritsObject  = require 'inherits-ex/lib/inheritsObject'
+setPrototypeOf  = require 'inherits-ex/lib/setPrototypeOf'
 defineProperty  = require 'util-ex/lib/defineProperty'
 isString        = require 'util-ex/lib/is/type/string'
 isObject        = require 'util-ex/lib/is/type/object'
 isEmptyObject   = require 'util-ex/lib/is/empty-object'
+extend          = require 'util-ex/lib/_extend'
 Attributes      = require 'abstract-type/lib/attributes'
 AttributeType   = require './attribute-type'
 Type            = require 'abstract-type'
@@ -93,14 +95,13 @@ module.exports = class ObjectType
   _toObject:(aOptions, aNameRequired)->
     result = super
     result.attributes = vAttrs = {}
-    if aOptions
-      delete aOptions.value
-      delete aOptions.attributes
+    #   delete aOptions.name
     for k,v of @attributes
-      vAttrs[k] = t = v.toObject(aOptions, false)
+      vAttrs[k] = t = v.toObject(null, false)
       #delete t[NAME]
       vAttrs[k] = t.type if getObjectKeys(t).length is 1
-      #console.log t
+      # console.log k, t
+    delete result.attributes unless getObjectKeys(vAttrs).length
     result
 
   toValue: (aValue)->
@@ -118,6 +119,8 @@ module.exports = class ObjectType
     if result
       if aOptions and aOptions.attributes
         for vName, vType of aOptions.attributes
+          if vType.writable and !vType.set and aValue[vName] isnt undefined
+            aValue[vName] = vType.toValue aValue[vName]
           if not vType.validate aValue[vName], false
             l = vType.errors.length
             if l
@@ -146,7 +149,7 @@ module.exports = class ObjectType
   wrapValue:(aObjectValue)->
     if isObject aObjectValue
       if not (aObjectValue instanceof ObjectValue)
-        inheritsObject aObjectValue, ObjectValue
+        setPrototypeOf aObjectValue, ObjectValue::
       if aObjectValue.hasOwnProperty '$type'
         @$type = @
       else

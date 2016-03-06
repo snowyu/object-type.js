@@ -74,6 +74,7 @@ module.exports = class AttributeType
   toString: -> '[Attribute ' + @name + ']'
   _toObject: (aOptions)->
     result = super
+    #delete aOptions.name if aOptions?
     vType = @type.toObject(aOptions)
     result.type = vType.name
     delete vType.name
@@ -83,7 +84,11 @@ module.exports = class AttributeType
       result[k] = v
     result
   toValue: (aValue)->
-    try result = JSON.parse aValue
+    if @type.toValue
+      result = @type.toValue(aValue)
+    else
+      result = aValue
+      #try result = JSON.parse aValue
     result
   _validate: (aValue, aOptions)->
     if aOptions # the attribute do not validate the aValue, the vType do it.

@@ -39,5 +39,5 @@ module.exports = class ObjectValue
     for vName in getObjectKeys aValue
       continue if vName[0] is '$'
       if !vStrict or (vMeta and (vType = vMeta[vName]))
-        result[vName] = @[vName]
+        result[vName] = @[vName] unless @[vName] is undefined
     result
