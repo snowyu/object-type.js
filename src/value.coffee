@@ -12,7 +12,7 @@ module.exports = class ObjectValue
 
   constructor: ->return super
   _initialize: (aValue, aType, aOptions)->
-    for k, attr of @$type.attributes
+    for k, attr of @$type.attributes.value()
       continue if k[0] is '$'
       vName = attr.name || k
       attr = extend {enumerable: true}, attr, (k,v)-> v isnt undefined
@@ -22,7 +22,7 @@ module.exports = class ObjectValue
     #  aValue = JSON.parse aValue
     if @$type.strict
       if aValue?
-        for k, t of @$type.attributes
+        for k, t of @$type.attributes.value()
           continue if k[0] is '$'
           v = aValue[k]
           @[k] = v if v isnt undefined and t.isValid v
@@ -34,7 +34,7 @@ module.exports = class ObjectValue
   _toObject: (aOptions)->
     aValue = @
     result = {}
-    vMeta = @$type.attributes
+    vMeta = @$type.attributes.value()
     vStrict = @$type.strict
     for vName in getObjectKeys aValue
       continue if vName[0] is '$'
