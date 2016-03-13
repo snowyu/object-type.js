@@ -32,7 +32,7 @@ module.exports = class AttributeType
     set:
       type: 'Function'
 
-  @defaultType: Type('String')
+  #@defaultType: Type('String')
   # _assign: (aOptions)->
   #   if isString aOptions
   #     vType = aOptions
