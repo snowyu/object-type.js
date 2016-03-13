@@ -71,9 +71,12 @@ module.exports = class ObjectAttributes
         @defineAttribute k, v, result
     return result
   assign: (aAttributes)->
-    for key of @
-      delete @[key] if @hasOwnProperty key
+    @clear()
     @defineAttributes aAttributes
+  clear: ->
+    for key in getOwnPropertyNames @
+      delete @[key]
+    return @
   getKeys: ->
     result = []
     for k, v of @
