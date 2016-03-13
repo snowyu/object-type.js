@@ -29,7 +29,10 @@ module.exports = class ObjectType
       type: 'Object'
       assigned: '$_attributes' # this should define the non-enumerable `$_attributes` property.
       assign: (value, dest, src, key)->
-         dest.attributes.assign(value) if (dest instanceof ObjectType) and dest.attributes?
+        if (dest instanceof ObjectType) and dest.attributes?
+          dest.attributes.assign(value)
+        else
+          value
     $_attributes:
       value: new ObjectAttributes
     strict:
