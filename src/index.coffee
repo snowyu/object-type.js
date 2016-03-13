@@ -1,15 +1,15 @@
-createObject    = require 'inherits-ex/lib/createObject'
 inheritsObject  = require 'inherits-ex/lib/inheritsObject'
 setPrototypeOf  = require 'inherits-ex/lib/setPrototypeOf'
 defineProperty  = require 'util-ex/lib/defineProperty'
 isString        = require 'util-ex/lib/is/type/string'
 isObject        = require 'util-ex/lib/is/type/object'
-isEmptyObject   = require 'util-ex/lib/is/empty-object'
 extend          = require 'util-ex/lib/_extend'
 Attributes      = require 'abstract-type/lib/attributes'
-AttributeType   = require './attribute-type'
 Type            = require 'abstract-type'
+AttributeType   = require './attribute-type'
+ObjectAttributes= require './object-attributes'
 ObjectValue     = require './value'
+defaultType     = require './default-type'
 register        = Type.register
 aliases         = Type.aliases
 
@@ -29,74 +29,29 @@ module.exports = class ObjectType
       type: 'Object'
       assigned: '$_attributes' # this should define the non-enumerable `$_attributes` property.
       assign: (value, dest, src, key)->
-        if dest and dest.defineAttributes
-          result = dest.defineAttributes(value)
-        else
-          result = value
-        result
+         dest.attributes.assign(value) if (dest instanceof ObjectType) and dest.attributes?
     $_attributes:
-      value:{}
+      value: new ObjectAttributes
     strict:
       type: 'Boolean'
 
-  @defaultType: Type('String')
-  ###
-    aOptions *(string)*: the type name.
-    aOptions *(AttributeType)*
-    aOptions *(Type)*: the type of this attribute.
-    aOptions *(object)*:
-      required: Boolean
-      type: ...
-  ###
-  defineAttribute: (aName, aOptions, aAttributes)->
-    unless aName and aName.length
-      throw TypeError('defineAttribute has no attribute name')
-    aAttributes = @attributes unless aAttributes?
-    if aAttributes[aName]?
-      throw TypeError('the attribute "' + aName + '" has already defined.')
-    if isString aOptions
-      vType = Type(aOptions)
-      throw TypeError("no such type registered:"+aOptions) unless vType
-      aOptions = {}
-      aOptions.type = vType
-    else if aOptions instanceof AttributeType
-      vAttribute = aOptions
-    else if aOptions instanceof Type
-      aOptions = {type: aOptions}
-    else if aOptions?
-      if aOptions.type
-        vType = aOptions.type
-        vType = Type(vType) #if isString vType
-        throw TypeError('no such type registered:'+aOptions.type) unless vType
-        vType = vType.clone(aOptions) unless vType.isSame(aOptions)
-        aOptions.type = vType
-      else if ObjectType.defaultType
-        aOptions.type = ObjectType.defaultType
-    unless vAttribute
-      aOptions = aOptions || {}
-      aOptions.name = aName
-      vAttribute = createObject AttributeType, aName, aOptions
-    aAttributes[aName] = vAttribute
+  #@defaultType: defaultType.type
+  oldRegister = @register
+  @register: (aClass)->
+    # TODO: howto hook to the ObjectAttributes?
+    oldRegister.apply ObjectType, arguments
 
-  ###
-    attributes =
-      attrName:
-        required: true
-        type: 'string'
-  ###
-  defineAttributes: (aAttributes)->
-    if not isEmptyObject(aAttributes) #avoid to recusive
-      result = {}
-      for k,v of aAttributes
-        continue if not k? or not v?
-        @defineAttribute k, v, result
-    return result
+  defineAttribute: (aName, aOptions, aAttributes)->
+    @attributes.defineAttribute(aName, aOptions, aAttributes)
+
+  defineAttributes: (aAttributes, result)->
+    @attributes.defineAttributes(aAttributes, result)
 
   _toObject:(aOptions, aNameRequired)->
     result = super
     result.attributes = vAttrs = {}
     #   delete aOptions.name
-    for k,v of @attributes
+    for k,v of @attributes.value()
       vAttrs[k] = t = v.toObject(null, false)
       #delete t[NAME]
       vAttrs[k] = t.type if getObjectKeys(t).length is 1
@@ -118,7 +73,7 @@ module.exports = class ObjectType
     result = isObject aValue
     if result
       if aOptions and aOptions.attributes
-        for vName, vType of aOptions.attributes
+        for vName, vType of aOptions.attributes.value()
           if vType.writable and !vType.set and aValue[vName] isnt undefined
             aValue[vName] = vType.toValue aValue[vName]
           if not vType.validate aValue[vName], false
@@ -145,7 +100,8 @@ module.exports = class ObjectType
                 message: 'is unknown'
               break if aOptions.raiseError
     result
-  # can wrap a common object to an ObjectValue.
+  # can wrap a common json object to an ObjectValue.
+  # Note: it will replace the prototype to the ObjectValue Class directly.
   wrapValue:(aObjectValue)->
     if isObject aObjectValue
       if not (aObjectValue instanceof ObjectValue)
@@ -158,12 +114,12 @@ module.exports = class ObjectType
   #TODO: maybe should use Attributes class and put this method into it.
   attrKeys: ->
     result = []
-    for k,v of @attributes
+    for k,v of @attributes.value()
       result.push v.name || k if v.enumerable isnt false
     result
   attrOwnPropertyNames: ->
     result = []
-    for k,v of @attributes
+    for k,v of @attributes.value()
       result.push v.name
     result
   # Returns
